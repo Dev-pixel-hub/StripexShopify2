@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: shopify-stripe-app
+    env: python
+    buildCommand: ""
+    startCommand: "python main.py"
+    plan: free
+    envVars:
+      - key: STRIPE_SECRET_KEY
+        value: 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
+      - key: SHOPIFY_API_KEY
+        value: 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
+      - key: SHOPIFY_STORE
+        value: DevSuggest.com
