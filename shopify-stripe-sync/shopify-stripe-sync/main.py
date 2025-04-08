@@ -5,11 +5,18 @@ import stripe
 
 # 🛍️ Shopify Store Details
 SHOPIFY_STORE = "DevSuggests.com"
-SHOPIFY_API_KEY = "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"
+import os
+
+SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
+SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET")
+SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
+
 
 # 💳 Stripe Secret Key
-STRIPE_SECRET_KEY = "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"
-stripe.api_key = STRIPE_SECRET_KEY
+import os
+
+import os
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY"))
 
 # --- Flask App Setup ---
 app = Flask(__name__)
