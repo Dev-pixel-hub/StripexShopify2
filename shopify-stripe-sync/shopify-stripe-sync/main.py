@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+port = int(os.environ.get("PORT", 10000))
+app.run(host='0.0.0.0', port=port)
 import requests
 import json
 from flask import Flask, request, jsonify, redirect
