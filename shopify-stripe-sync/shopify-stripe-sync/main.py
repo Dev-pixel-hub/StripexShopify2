@@ -9,18 +9,13 @@ import stripe
 
 # 🛍️ Shopify Store Details
 SHOPIFY_STORE = "DevSuggests.com"
-import os
 
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
 SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET")
 SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
 
-
 # 💳 Stripe Secret Key
-import os
-
-import os
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY"))
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 # --- Flask App Setup ---
 app = Flask(__name__)
@@ -81,7 +76,7 @@ def create_stripe_product(product):
     product_response = requests.post(
         "https://api.stripe.com/v1/products",
         data=product_data,
-        auth=(STRIPE_SECRET_KEY, "")
+        auth=(stripe.api_key, "")
     )
 
     if product_response.status_code == 200:
@@ -97,7 +92,7 @@ def create_stripe_product(product):
         price_response = requests.post(
             "https://api.stripe.com/v1/prices",
             data=price_data,
-            auth=(STRIPE_SECRET_KEY, "")
+            auth=(stripe.api_key, "")
         )
 
         if price_response.status_code == 200:
@@ -114,7 +109,7 @@ def create_stripe_product(product):
             session_response = requests.post(
                 "https://api.stripe.com/v1/checkout/sessions",
                 data=checkout_data,
-                auth=(STRIPE_SECRET_KEY, "")
+                auth=(stripe.api_key, "")
             )
 
             if session_response.status_code == 200:
@@ -137,7 +132,7 @@ def sync_shopify_to_stripe():
 
     for product in products:
         create_stripe_product(product)
-        
+
 @app.route('/')
 def home():
     return "Flask app is running!"
@@ -145,4 +140,3 @@ def home():
 # --- Run the Server ---
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
-
