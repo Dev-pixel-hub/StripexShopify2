@@ -1,3 +1,4 @@
+python main.py
 services:
   - type: web
     name: shopify-stripe-app
