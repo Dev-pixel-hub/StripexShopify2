@@ -20,7 +20,7 @@ SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 # --- Flask App Setup ---
-app = Flask(__name__)
+app = Flask(app)
 
 @app.route('/create-stripe-checkout-session', methods=['POST'])
 def create_checkout_session():
