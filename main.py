@@ -1,32 +1,39 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 import os
-port = int(os.environ.get("PORT", 10000))
-app.run(host='0.0.0.0', port=port)
+import stripe
 import requests
 import json
 from flask import Flask, request, jsonify, redirect
-import stripe
+from dotenv import load_dotenv
 
-# 🛍️ Shopify Store Details
+# Load environment variables from .env file
+load_dotenv()
+
+# --- Shopify and Stripe Keys ---
 SHOPIFY_STORE = "DevSuggests.com"
-
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
 SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET")
 SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
-
-# 💳 Stripe Secret Key
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 # --- Flask App Setup ---
-app = Flask(app)
+app = Flask(__name__)
 
+# Define the home route
+@app.route('/')
+def home():
+    return "Flask app is running!"
+
+# --- Stripe Checkout Session ---
 @app.route('/create-stripe-checkout-session', methods=['POST'])
 def create_checkout_session():
-    # Use form data instead of JSON
-    product_name = request.form.get('product_name')
-    product_price = request.form.get('product_price')
+    # Fetch JSON data from the request body
+    data = request.get_json()
+
+    product_name = data.get('product_name')
+    product_price = data.get('product_price')
+
+    if not product_name or not product_price:
+        return jsonify({'error': 'Missing product data'}), 400
 
     try:
         session = stripe.checkout.Session.create(
@@ -37,7 +44,7 @@ def create_checkout_session():
                     'product_data': {
                         'name': product_name,
                     },
-                    'unit_amount': int(float(product_price) * 100),  # convert dollars to cents
+                    'unit_amount': int(float(product_price) * 100),  # Convert dollars to cents
                 },
                 'quantity': 1,
             }],
@@ -135,10 +142,9 @@ def sync_shopify_to_stripe():
     for product in products:
         create_stripe_product(product)
 
-@app.route('/')
-def home():
-    return "Flask app is running!"
-
 # --- Run the Server ---
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000)
+    # Use the PORT environment variable from Render or default to 5000
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)  # Running the Flask app on the correct host and port
+
