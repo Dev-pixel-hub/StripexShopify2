@@ -3,7 +3,7 @@ services:
   - type: web
     name: shopify-stripe-app
     env: python
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: ""
     startCommand: "python main.py"
     plan: free
     envVars:
