@@ -23,6 +23,10 @@ app = Flask(__name__)
 def home():
     return "Flask app is running!"
 
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))  # Default to 10000 if PORT is not set
+    app.run(host='0.0.0.0', port=port)
+
 # --- Stripe Checkout Session ---
 @app.route('/create-stripe-checkout-session', methods=['POST'])
 def create_checkout_session():
