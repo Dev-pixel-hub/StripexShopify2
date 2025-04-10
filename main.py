@@ -23,25 +23,27 @@ app = Flask(__name__)
 def home():
     return "Flask app is running!"
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  # Default to 10000 if PORT is not set
-    app.run(host='0.0.0.0', port=port)
-
 # --- Stripe Checkout Session ---
-@app.route('/create-stripe-checkout-session', methods=['POST'])
+@app.route('/create-stripe-checkout-session', methods=['GET', 'POST'])
 def create_checkout_session():
+    if request.method == 'GET':
+        return '''
+            <form method="post">
+                <input type="text" name="product_name" placeholder="Product Name">
+                <input type="text" name="product_price" placeholder="Product Price">
+                <button type="submit">Start Checkout</button>
+            </form>
+        '''
     try:
-        data = request.form  # or request.get_json() if using JSON instead of form data
+        data = request.form
         product_name = data.get('product_name')
         product_price = data.get('product_price')
 
         if not product_name or not product_price:
             return jsonify({'error': 'Missing product name or price'}), 400
 
-        # Convert price to cents
         unit_amount = int(float(product_price) * 100)
 
-        # Create the Stripe checkout session
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -63,31 +65,6 @@ def create_checkout_session():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-    if not product_name or not product_price:
-        return jsonify({'error': 'Missing product data'}), 400
-
-    try:
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {
-                        'name': product_name,
-                    },
-                    'unit_amount': int(float(product_price) * 100),  # Convert dollars to cents
-                },
-                'quantity': 1,
-            }],
-            mode='payment',
-            success_url='https://devsuggests.com/pages/success',
-            cancel_url='https://devsuggests.com/pages/cancel',
-        )
-        return redirect(session.url, code=303)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
 
 # --- Shopify to Stripe Sync (Optional) ---
 def get_shopify_products():
@@ -177,7 +154,5 @@ def sync_shopify_to_stripe():
 
 # --- Run the Server ---
 if __name__ == '__main__':
-    # Use the PORT environment variable from Render or default to 5000
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)  # Running the Flask app on the correct host and port
-
+    app.run(host='0.0.0.0', port=port)
