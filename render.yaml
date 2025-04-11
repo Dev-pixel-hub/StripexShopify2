@@ -1,15 +1,22 @@
 python main.py
 services:
   - type: web
-    name: shopify-stripe-app
+    name: stripe-shopify-integration
     env: python
-    buildCommand: ""
-    startCommand: "python main.py"
+    region: oregon  # or choose your preferred region
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
     plan: free
+    branch: main
+    autoDeploy: true
     envVars:
+      - key: FLASK_ENV
+        value: production
       - key: STRIPE_SECRET_KEY
-        value: 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
+        fromEnvVar: STRIPE_SECRET_KEY
       - key: SHOPIFY_API_KEY
-        value: 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
-      - key: SHOPIFY_STORE
-        value: DevSuggest.com
+        fromEnvVar: SHOPIFY_API_KEY
+      - key: SHOPIFY_API_SECRET
+        fromEnvVar: SHOPIFY_API_SECRET
+      - key: SHOPIFY_ADMIN_TOKEN
+        fromEnvVar: SHOPIFY_ADMIN_TOKEN
