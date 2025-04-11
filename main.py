@@ -58,7 +58,7 @@ def create_checkout_session():
             }],
             mode='payment',
             success_url='https://devsuggests.com/pages/success',
-            cancel_url='https://devsuggests.com/pages/cancel',
+            cancel_url='https://devsuggests.com/collections/all',
         )
 
         return redirect(session.url, code=303)
