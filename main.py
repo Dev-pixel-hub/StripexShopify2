@@ -24,43 +24,51 @@ def home():
     return "Flask app is running!"
 
 # --- Stripe Checkout Session ---
-@app.route('/create-stripe-checkout-session', methods=['GET', 'POST'])
+from flask import request, jsonify, redirect
+import stripe
+
+@app.route('/create-stripe-checkout-session', methods=['POST'])
 def create_checkout_session():
-    if request.method == 'GET':
-        return '''
-            <form method="post">
-                <input type="text" name="product_name" placeholder="Product Name">
-                <input type="text" name="product_price" placeholder="Product Price">
-                <button type="submit">Start Checkout</button>
-            </form>
-        '''
+    product_names = request.form.getlist('product_name[]')
+    product_prices = request.form.getlist('product_price[]')
+    quantities = request.form.getlist('quantity[]')
+
+    if not product_names or not product_prices:
+        return jsonify({'error': 'Missing product name or price'}), 400
+
+    # Create line items for Stripe session
+    line_items = []
+    for name, price, quantity in zip(product_names, product_prices, quantities):
+        try:
+            unit_amount = int(float(price) * 100)  # convert to cents
+            qty = int(quantity)
+            if qty <= 0:
+                continue
+        except:
+            continue
+
+        line_items.append({
+            'price_data': {
+                'currency': 'usd',
+                'product_data': {
+                    'name': name,
+                },
+                'unit_amount': unit_amount,
+            },
+            'quantity': qty,
+        })
+
+    if not line_items:
+        return jsonify({'error': 'No valid products'}), 400
+
     try:
-        data = request.form
-        product_name = data.get('product_name')
-        product_price = data.get('product_price')
-
-        if not product_name or not product_price:
-            return jsonify({'error': 'Missing product name or price'}), 400
-
-        unit_amount = int(float(product_price) * 100)
-
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {
-                        'name': product_name,
-                    },
-                    'unit_amount': unit_amount,
-                },
-                'quantity': 1,
-            }],
+            line_items=line_items,
             mode='payment',
-            success_url='https://devsuggests.com/pages/success',
-            cancel_url='https://devsuggests.com/collections/all',
+            success_url='https://yourshopifydomain.com/success',
+            cancel_url='https://yourshopifydomain.com/cancel',
         )
-
         return redirect(session.url, code=303)
 
     except Exception as e:
