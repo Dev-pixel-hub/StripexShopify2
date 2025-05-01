@@ -2,11 +2,9 @@ import os
 import stripe
 import requests
 import json
-from flasimport os
-import stripe
-import requests
 from flask import Flask, request, jsonify, redirect
 from dotenv import load_dotenv
+
 
 # Load environment variables
 load_dotenv()
