@@ -38,25 +38,25 @@ def create_checkout_session():
 
     # Create line items for Stripe session
     line_items = []
-    for name, price, quantity in zip(product_names, product_prices, quantities):
-        try:
-            unit_amount = int(float(price) * 100)  # convert to cents
-            qty = int(quantity)
-            if qty <= 0:
-                continue
-        except:
+   for name, price, quantity in zip(product_names, product_prices, quantities):
+    try:
+        unit_amount = int(float(price) * 100)  # convert to cents
+        qty = int(quantity)
+        if qty <= 0:
             continue
+    except ValueError:
+        return jsonify({'error': 'Invalid price or quantity format'}), 400
 
-        line_items.append({
-            'price_data': {
-                'currency': 'usd',
-                'product_data': {
-                    'name': name,
-                },
-                'unit_amount': unit_amount,
+    line_items.append({
+        'price_data': {
+            'currency': 'usd',
+            'product_data': {
+                'name': name,
             },
-            'quantity': qty,
-        })
+            'unit_amount': unit_amount,
+        },
+        'quantity': qty,
+    })
 
     if not line_items:
         return jsonify({'error': 'No valid products'}), 400
