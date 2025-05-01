@@ -161,7 +161,7 @@ def sync_shopify_to_stripe():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-k import Flask, request, jsonify, redirect
+import Flask, request, jsonify, redirect
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
