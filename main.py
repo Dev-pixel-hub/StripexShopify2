@@ -24,6 +24,10 @@ app = Flask(__name__)
 def home():
     return "Flask app is running!"
 
+@app.route('/ping')
+def ping():
+    return "OK", 200
+
 # --- Stripe Checkout Session ---
 @app.route('/create-stripe-checkout-session', methods=['POST'])
 def create_checkout_session():
