@@ -30,7 +30,7 @@ def create_checkout_session():
     try:
         print("RAW FORM DATA:", request.form)
         
-       product_names = request.form.getlist('product_name[]')
+        product_names = request.form.getlist('product_name[]')
         product_prices = request.form.getlist('product_price[]')
         quantities = request.form.getlist('quantity[]')
 
