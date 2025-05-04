@@ -3,7 +3,7 @@ import os
 import stripe
 import requests
 import json
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, redirect
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -18,6 +18,7 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 # --- Flask App Setup ---
 app = Flask(__name__)
+stripe.api_key = "sk_test_YOUR_SECRET_KEY_HERE"
 
 # Home route
 @app.route('/')
@@ -27,28 +28,12 @@ def home():
 # --- Stripe Checkout Session ---
 @app.route('/create-stripe-checkout-session', methods=['POST'])
 def create_checkout_session():
-    try:
-        print("RAW FORM DATA:", request.form)
-        
         product_names = request.form.getlist('product_name[]')
         product_prices = request.form.getlist('product_price[]')
         quantities = request.form.getlist('quantity[]')
 
-        print("product_names:", product_names)
-        print("product_prices:", product_prices)
-        print("quantities:", quantities)
-    
         if not product_names or not product_prices:
-            return jsonify({'error': 'Missing product name or price'}), 400
-
-        # TODO: Add Stripe logic here
-        return jsonify({'success': True})  # Replace with your real response
-
-    except Exception as e:
-        import traceback
-        print("⚠️ Error occurred:", str(e))
-        traceback.print_exc()
-        return jsonify({'error': 'Internal Server Error'}), 500
+            return ({'error': 'Missing product name or price'}), 400
     
         # Create line items
         line_items = []
