@@ -14,11 +14,10 @@ SHOPIFY_STORE = "DevSuggests.com"
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
 SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET")
 SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")  # Only use from .env
 
 # --- Flask App Setup ---
 app = Flask(__name__)
-stripe.api_key = "sk_test_YOUR_SECRET_KEY_HERE"  # Replace with your actual key or use env
 
 # Home route
 @app.route('/')
@@ -39,7 +38,7 @@ def create_checkout_session():
     line_items = []
     for name, price, quantity in zip(product_names, product_prices, quantities):
         try:
-            unit_amount = int(float(price) * 100)  # convert to cents
+            unit_amount = int(float(price) * 100)
             qty = int(quantity)
             if qty <= 0:
                 continue
@@ -72,7 +71,7 @@ def create_checkout_session():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# --- Shopify to Stripe Sync (Optional) ---
+# --- Shopify to Stripe Sync ---
 def get_shopify_products():
     url = f"https://{SHOPIFY_STORE}/admin/api/2023-10/products.json"
     headers = {
@@ -145,5 +144,19 @@ def create_stripe_product(product):
         else:
             print("⚠️ Failed to create price in Stripe.")
     else:
-        print("❌ Failed
+        print("❌ Failed to create Stripe product.")
+        print(f"🔎 Stripe Response: {product_response.status_code} {product_response.text}")
 
+def sync_shopify_to_stripe():
+    products = get_shopify_products()
+    if not products:
+        print("No products found.")
+        return
+
+    for product in products:
+        create_stripe_product(product)
+
+# --- Run the Server ---
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
