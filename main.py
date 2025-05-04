@@ -26,10 +26,15 @@ def home():
 # --- Stripe Checkout Session ---
 @app.route('/create-stripe-checkout-session', methods=['POST'])
 def create_checkout_session():
-    data = request.form
+    print("RAW FORM DATA:", request.form)
+    
     product_names = data.getlist('product_name[]')
     product_prices = data.getlist('product_price[]')
     quantities = data.getlist('quantity[]')
+    
+    print("product_names:", product_names)
+    print("product_prices:", product_prices)
+    print("quantities:", quantities)
 
     if not product_names or not product_prices:
         return jsonify({'error': 'Missing product name or price'}), 400
