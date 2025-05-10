@@ -1,0 +1,41 @@
+from flask import Flask, jsonify
+import requests
+import stripe
+
+app = Flask(__name__)
+
+# Replace with your real credentials
+SHOPIFY_API_KEY = 'your_shopify_api_key'
+SHOPIFY_PASSWORD = 'your_shopify_api_password'
+SHOPIFY_STORE = 'your-shop-name.myshopify.com'
+STRIPE_API_KEY = 'your_stripe_secret_key'
+
+stripe.api_key = STRIPE_API_KEY
+
+@app.route('/sync-existing-products', methods=['GET'])
+def sync_existing_products():
+    shopify_url = f'https://{SHOPIFY_API_KEY}:{SHOPIFY_PASSWORD}@{SHOPIFY_STORE}/admin/api/2023-04/products.json'
+    response = requests.get(shopify_url)
+    
+    if response.status_code != 200:
+        return jsonify({'error': 'Failed to fetch products from Shopify'}), 500
+
+    products = response.json().get('products', [])
+    created_products = []
+
+    for product in products:
+        title = product.get('title')
+        description = product.get('body_html', '')
+        image_url = product.get('image', {}).get('src')
+
+        try:
+            stripe_product = stripe.Product.create(
+                name=title,
+                description=description,
+                images=[image_url] if image_url else []
+            )
+            created_products.append(stripe_product.id)
+        except Exception as e:
+            print(f"Error creating product in Stripe: {e}")
+
+    return jsonify({'message': 'Products synced', 'created_products': created_products})
