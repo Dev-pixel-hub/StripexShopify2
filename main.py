@@ -164,3 +164,27 @@ def sync_shopify_to_stripe():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
+@app.route('/shopify-webhook', methods=['POST'])
+def handle_shopify_product_creation():
+    data = request.get_json()
+
+    title = data.get('title')
+    price = data.get('variants')[0]['price']
+    image_url = data.get('image', {}).get('src')
+
+    # Create Stripe product
+    product = stripe.Product.create(
+        name=title,
+        images=[image_url] if image_url else []
+    )
+
+    # Create Stripe price
+    stripe.Price.create(
+        unit_amount=int(float(price) * 100),  # Converts "9.99" to 999
+        currency='usd',
+        product=product['id']
+    )
+
+    return jsonify({'status': 'success'}), 200
+
