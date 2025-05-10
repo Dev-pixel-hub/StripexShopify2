@@ -68,8 +68,8 @@ def create_checkout_session():
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url='https://yourshopifydomain.com/success',
-            cancel_url='https://yourshopifydomain.com/cancel',
+            success_url='https://DevSuggest.com/succsess',
+            cancel_url='https://DevSuggests.com/cancel',
         )
         return redirect(session.url, code=303)
     except Exception as e:
