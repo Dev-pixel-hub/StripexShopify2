@@ -5,16 +5,17 @@ import stripe
 app = Flask(__name__)
 
 # Replace with your real credentials
-SHOPIFY_API_KEY = 'your_shopify_api_key'
-SHOPIFY_PASSWORD = 'your_shopify_api_password'
-SHOPIFY_STORE = 'your-shop-name.myshopify.com'
-STRIPE_API_KEY = 'your_stripe_secret_key'
+SHOPIFY_STORE = "DevSuggests.com"
+SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")  # Only use from .env
+SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
+
 
 stripe.api_key = STRIPE_API_KEY
 
 @app.route('/sync-existing-products', methods=['GET'])
 def sync_existing_products():
-    shopify_url = f'https://{SHOPIFY_API_KEY}:{SHOPIFY_PASSWORD}@{SHOPIFY_STORE}/admin/api/2023-04/products.json'
+    shopify_url = f'https://{stripe.api_key}:{SHOPIFY_ADMIN_TOKEN}@{SHOPIFY_STORE}/admin/api/2023-04/products.json'
     response = requests.get(shopify_url)
     
     if response.status_code != 200:
