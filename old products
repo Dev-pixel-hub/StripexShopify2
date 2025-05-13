@@ -1,0 +1,44 @@
+import requests
+import stripe
+
+# 🔐 Your API Keys
+SHOPIFY_API_KEY = 'your-shopify-api-key'
+SHOPIFY_PASSWORD = 'your-shopify-api-password'
+SHOP_NAME = 'your-shop-name'  # e.g., "my-shop-name" (without .myshopify.com)
+
+STRIPE_SECRET_KEY = 'your-stripe-secret-key'
+stripe.api_key = STRIPE_SECRET_KEY
+
+# ✅ 1. Get all products from Shopify
+print("Fetching products from Shopify...")
+shopify_url = f"https://{SHOPIFY_API_KEY}:{SHOPIFY_PASSWORD}@{SHOP_NAME}.myshopify.com/admin/api/2023-10/products.json"
+response = requests.get(shopify_url)
+
+if response.status_code != 200:
+    print("❌ Failed to fetch Shopify products:", response.text)
+    exit()
+
+products = response.json().get('products', [])
+
+# ✅ 2. Sync to Stripe
+for product in products:
+    print(f"Creating product in Stripe: {product['title']}")
+
+    try:
+        stripe_product = stripe.Product.create(
+            name=product['title'],
+            description=product.get('body_html', ''),
+        )
+
+        variant = product['variants'][0]
+        price = stripe.Price.create(
+            unit_amount=int(float(variant['price']) * 100),  # Convert to cents
+            currency='usd',
+            product=stripe_product.id,
+        )
+
+        print(f"✅ Synced: {product['title']} (Price: {variant['price']})")
+
+    except Exception as e:
+        print(f"❌ Error syncing product: {product['title']}")
+        print(e)
