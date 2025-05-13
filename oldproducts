@@ -4,33 +4,38 @@ import requests
 import stripe
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# 📥 Load environment variables from .env file
 load_dotenv()
 
 # 🔐 Environment Variables
-SHOPIFY_STORE = "DevSuggests.com"
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
-SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET")  # Not used in this script, but good to have
-SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")  # Access token for private app
+SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET")  # Not used in this script
+SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")  # Required
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 # ✅ 1. Get all products from Shopify
 print("📦 Fetching products from Shopify...")
 
-shopify_url = "https://Devsuggests/admin/api/2023-10/products.json"
+# 🛍️ Use your myshopify.com subdomain (NOT custom domain)
+shopify_url = "https://j5wn1a-m6.myshopify.com/admin/api/2023-10/products.json"
+
 headers = {
     "Content-Type": "application/json",
     "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
 }
 
+# Show which SSL cert file is being used
+print("🔐 Using certificate from:", certifi.where())
+
+# ⚠️ Make the request with cert verification
 response = requests.get(shopify_url, headers=headers, verify=certifi.where())
 
-print(response.json())
-
+# 🚨 Handle HTTP errors
 if response.status_code != 200:
     print("❌ Failed to fetch Shopify products:", response.text)
     exit()
 
+# 📦 Parse products
 products = response.json().get('products', [])
 
 # ✅ 2. Sync each to Stripe
@@ -38,16 +43,16 @@ for product in products:
     print(f"➡️ Creating product in Stripe: {product['title']}")
 
     try:
-        # Create the product in Stripe
+        # 🆕 Create the product in Stripe
         stripe_product = stripe.Product.create(
             name=product['title'],
             description=product.get('body_html', ''),
         )
 
-        # Create a price for the first variant
+        # 💰 Create a price using the first variant
         variant = product['variants'][0]
         price = stripe.Price.create(
-            unit_amount=int(float(variant['price']) * 100),  # Convert to cents
+            unit_amount=int(float(variant['price']) * 100),  # Convert dollars to cents
             currency='usd',
             product=stripe_product.id,
         )
@@ -57,4 +62,5 @@ for product in products:
     except Exception as e:
         print(f"❌ Error syncing product: {product['title']}")
         print(e)
+
 
