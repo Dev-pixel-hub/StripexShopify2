@@ -13,7 +13,7 @@ SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
 
 stripe.api_key = STRIPE_API_KEY
 
-@app.route('/sync-existing-products', methods=['GET'])
+@app.route('/sync-existing-products', methods=['GET, POST'])
 def sync_existing_products():
     shopify_url = f'https://{stripe.api_key}:{SHOPIFY_ADMIN_TOKEN}@{SHOPIFY_STORE}/admin/api/2023-04/products.json'
     response = requests.get(shopify_url)
