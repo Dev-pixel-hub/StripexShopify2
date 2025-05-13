@@ -17,13 +17,15 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 # ✅ 1. Get all products from Shopify
 print("📦 Fetching products from Shopify...")
 
-shopify_url = f"https://{SHOPIFY_STORE}/admin/api/2023-10/products.json"
+shopify_url = "https://Devsuggests/admin/api/2023-10/products.json"
 headers = {
     "Content-Type": "application/json",
     "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
 }
 
-response = requests.get(shopify_url, verify=certifi.where())
+response = requests.get(shopify_url, headers=headers, verify=certifi.where())
+
+print(response.json())
 
 if response.status_code != 200:
     print("❌ Failed to fetch Shopify products:", response.text)
