@@ -65,7 +65,7 @@ def create_checkout_session():
 
     try:
         session = stripe.checkout.Session.create(
-            payment_method_types=['card', 'affirm', 'afterpay_clearpay', 'amazon_pay', 'apple_pay', 'cash_app_pay', 'klarna', 'samsung_pay' ],
+            payment_method_types=['card', 'affirm', 'afterpay_clearpay', 'amazon_pay', 'apple_pay', 'cashapp', 'klarna', 'samsung_pay', 'link' ],
             line_items=line_items,
             mode='payment',
             success_url='https://DevSuggests.com/success',
