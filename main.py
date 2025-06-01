@@ -1,8 +1,8 @@
-import traceback
 import os
 import stripe
 import requests
 import json
+import traceback
 from flask import Flask, request, redirect, jsonify
 from dotenv import load_dotenv
 
@@ -19,7 +19,7 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")  # Only use from .env
 # --- Flask App Setup ---
 app = Flask(__name__)
 
-# Home route
+# --- Routes ---
 @app.route('/')
 def home():
     return "Flask app is running!"
@@ -28,7 +28,6 @@ def home():
 def ping():
     return "OK", 200
 
-# --- Stripe Checkout Session ---
 @app.route('/create-stripe-checkout-session', methods=['POST'])
 def create_checkout_session():
     product_names = request.form.getlist('product_name[]')
@@ -38,7 +37,6 @@ def create_checkout_session():
     if not product_names or not product_prices:
         return jsonify({'error': 'Missing product name or price'}), 400
 
-    # Create line items
     line_items = []
     for name, price, quantity in zip(product_names, product_prices, quantities):
         try:
@@ -75,7 +73,36 @@ def create_checkout_session():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# --- Shopify to Stripe Sync ---
+@app.route('/shopify-webhook', methods=['POST'])
+def handle_shopify_product_creation():
+    try:
+        data = request.get_json()
+        title = data.get('title')
+        price = data.get('variants')[0]['price']
+        image_url = data.get('image', {}).get('src')
+
+        # Create Stripe Product
+        product = stripe.Product.create(
+            name=title,
+            images=[image_url] if image_url else []
+        )
+
+        # Create Stripe Price
+        stripe.Price.create(
+            unit_amount=int(float(price) * 100),
+            currency='usd',
+            product=product['id']
+        )
+
+        print(f"✅ Synced product '{title}' from Shopify to Stripe.")
+        return jsonify({'status': 'success'}), 200
+
+    except Exception as e:
+        print("❌ Error handling Shopify webhook:")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+# --- Shopify to Stripe Manual Sync ---
 def get_shopify_products():
     url = f"https://{SHOPIFY_STORE}/admin/api/2023-10/products.json"
     headers = {
@@ -92,99 +119,81 @@ def get_shopify_products():
         return []
 
 def create_stripe_product(product):
-    product_name = product["title"]
-    product_desc = product.get("body_html", "")
-    price_cents = int(float(product["variants"][0]["price"]) * 100)
+    try:
+        product_name = product["title"]
+        product_desc = product.get("body_html", "")
+        price_cents = int(float(product["variants"][0]["price"]) * 100)
 
-    product_data = {
-        "name": product_name,
-        "description": product_desc,
-    }
-
-    product_response = requests.post(
-        "https://api.stripe.com/v1/products",
-        data=product_data,
-        auth=(stripe.api_key, "")
-    )
-
-    if product_response.status_code == 200:
-        stripe_product = product_response.json()
-        print(f"✅ Created product '{product_name}' in Stripe.")
-
-        price_data = {
-            "unit_amount": price_cents,
-            "currency": "usd",
-            "product": stripe_product["id"]
+        # Create Stripe Product
+        product_data = {
+            "name": product_name,
+            "description": product_desc,
         }
 
-        price_response = requests.post(
-            "https://api.stripe.com/v1/prices",
-            data=price_data,
+        product_response = requests.post(
+            "https://api.stripe.com/v1/products",
+            data=product_data,
             auth=(stripe.api_key, "")
         )
 
-        if price_response.status_code == 200:
-            stripe_price = price_response.json()
+        if product_response.status_code == 200:
+            stripe_product = product_response.json()
+            print(f"✅ Created product '{product_name}' in Stripe.")
 
-            checkout_data = {
-                "line_items[0][price]": stripe_price["id"],
-                "line_items[0][quantity]": 1,
-                "mode": "payment",
-                "success_url": "https://devsuggests.com/pages/success",
-                "cancel_url": "https://devsuggests.com/pages/cancel"
+            price_data = {
+                "unit_amount": price_cents,
+                "currency": "usd",
+                "product": stripe_product["id"]
             }
 
-            session_response = requests.post(
-                "https://api.stripe.com/v1/checkout/sessions",
-                data=checkout_data,
+            price_response = requests.post(
+                "https://api.stripe.com/v1/prices",
+                data=price_data,
                 auth=(stripe.api_key, "")
             )
 
-            if session_response.status_code == 200:
-                session = session_response.json()
-                print(f"🛒 Checkout Link: {session['url']}")
+            if price_response.status_code == 200:
+                stripe_price = price_response.json()
+
+                # Optional: Generate a checkout session
+                checkout_data = {
+                    "line_items[0][price]": stripe_price["id"],
+                    "line_items[0][quantity]": 1,
+                    "mode": "payment",
+                    "success_url": "https://devsuggests.com/pages/success",
+                    "cancel_url": "https://devsuggests.com/pages/cancel"
+                }
+
+                session_response = requests.post(
+                    "https://api.stripe.com/v1/checkout/sessions",
+                    data=checkout_data,
+                    auth=(stripe.api_key, "")
+                )
+
+                if session_response.status_code == 200:
+                    session = session_response.json()
+                    print(f"🛒 Checkout Link: {session['url']}")
+                else:
+                    print("⚠️ Failed to create checkout session.")
             else:
-                print("⚠️ Failed to create checkout session.")
+                print("⚠️ Failed to create price in Stripe.")
         else:
-            print("⚠️ Failed to create price in Stripe.")
-    else:
-        print("❌ Failed to create Stripe product.")
-        print(f"🔎 Stripe Response: {product_response.status_code} {product_response.text}")
+            print("❌ Failed to create Stripe product.")
+            print(f"🔎 Stripe Response: {product_response.status_code} {product_response.text}")
+
+    except Exception as e:
+        print(f"❌ Error syncing product: {e}")
+        traceback.print_exc()
 
 def sync_shopify_to_stripe():
     products = get_shopify_products()
     if not products:
         print("No products found.")
         return
-
     for product in products:
         create_stripe_product(product)
 
-# --- Run the Server ---
+# --- Run Flask Server ---
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-
-@app.route('/shopify-webhook', methods=['POST'])
-def handle_shopify_product_creation():
-    data = request.get_json()
-
-    title = data.get('title')
-    price = data.get('variants')[0]['price']
-    image_url = data.get('image', {}).get('src')
-
-    # Create Stripe product
-    product = stripe.Product.create(
-        name=title,
-        images=[image_url] if image_url else []
-    )
-
-    # Create Stripe price
-    stripe.Price.create(
-        unit_amount=int(float(price) * 100),  # Converts "9.99" to 999
-        currency='usd',
-        product=product['id']
-    )
-
-    return jsonify({'status': 'success'}), 200
-
