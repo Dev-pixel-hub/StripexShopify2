@@ -114,7 +114,7 @@ def create_shopify_order(session):
         print("❌ Error in create_shopify_order:", str(e))
 
 # --- Stripe Webhook Endpoint ---
-@app.route('/webhook', methods=['POST'])
+@app.route("/stripe-webhook", methods=['POST'])
 def stripe_webhook():
     payload = request.data
     sig_header = request.headers.get('stripe-signature')
