@@ -20,5 +20,5 @@ services:
         fromEnvVar: SHOPIFY_API_SECRET
       - key: SHOPIFY_ADMIN_TOKEN
         fromEnvVar: SHOPIFY_ADMIN_TOKEN
-      - key: STRIPE_SECRET_KEY
-        fromEnvVar: STRIPE_SECRET_KEY
+      - key: STRIPE_WEBHOOK_SECRET
+        fromEnvVar: STRIPE_WEBHOOK_SECRET
