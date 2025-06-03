@@ -183,7 +183,7 @@ def create_stripe_product(product):
                     "line_items[0][price]": stripe_price["id"],
                     "line_items[0][quantity]": 1,
                     "mode": "payment",
-                    "success_url": "https://devsuggests.com/pages/success",
+                    "success_url": "https://devsuggests.com/account",
                     "cancel_url": "https://devsuggests.com/pages/cancel"
                 },
                 auth=(stripe.api_key, "")
