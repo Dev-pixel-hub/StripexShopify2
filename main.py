@@ -65,6 +65,11 @@ def create_checkout_session():
             payment_method_types=['card', 'affirm', 'afterpay_clearpay', 'klarna'],
             line_items=line_items,
             mode='payment',
+            billing_address_collection='required',
+            billing_address_collection='required',
+            shipping_address_collection={
+                'allowed_countries': ['US', 'CA']  # or ['US'] if only U.S.
+            }, 
             success_url='https://DevSuggests.com',
             cancel_url='https://DevSuggests.com/cancel',
         )
