@@ -65,7 +65,7 @@ def create_checkout_session():
             payment_method_types=['card', 'affirm', 'afterpay_clearpay', 'klarna'],
             line_items=line_items,
             mode='payment',
-            success_url='https://DevSuggests.com/success',
+            success_url='https://DevSuggests.com',
             cancel_url='https://DevSuggests.com/cancel',
         )
         return redirect(session.url, code=303)
