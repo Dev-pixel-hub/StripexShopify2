@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Shopify and Stripe Keys ---
-SHOPIFY_STORE = "DevSuggests.com"
+SHOPIFY_STORE = "devsuggests.myshopify.com"
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
 SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET")
 SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
@@ -150,7 +150,7 @@ def stripe_webhook():
 def get_shopify_products():
     url = f"https://{SHOPIFY_STORE}/admin/api/2023-10/products.json"
     headers = {
-        "X-Shopify-Access-Token": SHOPIFY_API_KEY,
+        "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
         "Content-Type": "application/json"
     }
     response = requests.get(url, headers=headers)
