@@ -112,7 +112,12 @@ def create_shopify_order(session):
         if response.status_code == 201:
             print("✅ Shopify order created.")
         else:
-            print("❌ Shopify order failed:", response.text)
+            print("❌ Shopify order failed:")
+            print("Status:", response.status_code)
+            print("URL:", response.url)
+            print("Headers:", response.headers)
+            print("Response Text:", response.text)
+
 
     except Exception as e:
         print("❌ Error in create_shopify_order:", str(e))
