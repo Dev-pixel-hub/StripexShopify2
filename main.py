@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Shopify and Stripe Keys ---
-SHOPIFY_STORE = "devsuggests.myshopify.com"
+SHOPIFY_STORE = os.getenv("SHOPIFY_STORE")
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
 SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET")
 SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
