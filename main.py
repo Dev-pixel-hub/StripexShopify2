@@ -34,13 +34,12 @@ def create_checkout_session():
     product_names = request.form.getlist('product_name[]')
     product_prices = request.form.getlist('product_price[]')
     quantities = request.form.getlist('quantity[]')
-    variant_ids = request.form.getlist('variant_id[]')
 
     if not product_names or not product_prices:
         return jsonify({'error': 'Missing product name or price'}), 400
 
     line_items = []
-    for name, price, quantity, variant_id in zip(product_names, product_prices, quantities, variant_ids):
+    for name, price, quantity in zip(product_names, product_prices, quantities):
         try:
             unit_amount = int(float(price) * 100)
             qty = int(quantity)
@@ -52,7 +51,7 @@ def create_checkout_session():
         line_items.append({
             'price_data': {
                 'currency': 'usd',
-                'product_data': {'name': name, 'metadata': {'variant_id': variant_id}},
+                'product_data': {'name': name},
                 'unit_amount': unit_amount,
             },
             'quantity': qty,
@@ -67,7 +66,9 @@ def create_checkout_session():
             line_items=line_items,
             mode='payment',
             billing_address_collection='required',
-            shipping_address_collection={'allowed_countries': ['US', 'CA']},
+            shipping_address_collection={
+                'allowed_countries': ['US', 'CA']
+            }, 
             success_url='https://DevSuggests.com',
             cancel_url='https://DevSuggests.com/cancel',
         )
@@ -79,14 +80,15 @@ def create_checkout_session():
 def create_shopify_order(session):
     try:
         line_items = []
-        for item in session.get("line_items", []):
+        for item in session.get("display_items", []):
+            title = item.get("description", "Product")
+            amount = float(item["amount_total"]) / 100
             quantity = item["quantity"]
-            variant_id = item["price"]["product"]["metadata"].get("variant_id")
-            if variant_id:
-                line_items.append({
-                    "variant_id": int(variant_id),
-                    "quantity": quantity
-                })
+            line_items.append({
+                "title": title,
+                "price": amount,
+                "quantity": quantity
+            })
 
         order_data = {
             "order": {
@@ -110,7 +112,11 @@ def create_shopify_order(session):
         if response.status_code == 201:
             print("✅ Shopify order created.")
         else:
-            print("❌ Shopify order failed:", response.text)
+            print("❌ Shopify order failed:")
+            print("Status:", response.status_code)
+            print("URL:", response.url)
+            print("Headers:", response.headers)
+            print("Response Text:", response.text)
 
     except Exception as e:
         print("❌ Error in create_shopify_order:", str(e))
@@ -130,10 +136,7 @@ def stripe_webhook():
         return 'Invalid signature', 400
 
     if event['type'] == 'checkout.session.completed':
-        session = stripe.checkout.Session.retrieve(
-            event['data']['object']['id'],
-            expand=['line_items.data.price.product']
-        )
+        session = event['data']['object']
         print("✅ Checkout session completed:", session)
         create_shopify_order(session)
 
@@ -165,11 +168,10 @@ def create_stripe_product(product):
     product_name = product["title"]
     product_desc = product.get("body_html", "")
     price_cents = int(float(product["variants"][0]["price"]) * 100)
-    variant_id = product["variants"][0]["id"]
 
     product_response = requests.post(
         "https://api.stripe.com/v1/products",
-        data={"name": product_name, "description": product_desc, "metadata[variant_id]": variant_id},
+        data={"name": product_name, "description": product_desc},
         auth=(stripe.api_key, "")
     )
 
@@ -215,12 +217,10 @@ def handle_shopify_product_creation():
     title = data.get('title')
     price = data.get('variants')[0]['price']
     image_url = data.get('image', {}).get('src')
-    variant_id = data.get('variants')[0]['id']
 
     product = stripe.Product.create(
         name=title,
-        images=[image_url] if image_url else [],
-        metadata={"variant_id": variant_id}
+        images=[image_url] if image_url else []
     )
 
     stripe.Price.create(
@@ -231,7 +231,7 @@ def handle_shopify_product_creation():
 
     return jsonify({'status': 'success'}), 200
 
-# --- Run Server ---
+# --- ✅ RUN SERVER ---
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
