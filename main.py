@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Shopify and Stripe Keys ---
-SHOPIFY_STORE = os.getenv("SHOPIFY_STORE")
+SHOPIFY_STORE = os.getenv("SHOPIFY_STORE")  # e.g., "devsuggests.myshopify.com"
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
 SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET")
 SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
@@ -66,9 +66,7 @@ def create_checkout_session():
             line_items=line_items,
             mode='payment',
             billing_address_collection='required',
-            shipping_address_collection={
-                'allowed_countries': ['US', 'CA']
-            }, 
+            shipping_address_collection={'allowed_countries': ['US', 'CA']},
             success_url='https://DevSuggests.com',
             cancel_url='https://DevSuggests.com/cancel',
         )
@@ -76,18 +74,22 @@ def create_checkout_session():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# --- Create Shopify Order from Stripe Session ---
-def create_shopify_order(session):
+# --- Create Shopify Order ---
+def create_shopify_order(session_data):
     try:
+        # ✅ Retrieve full session with line items
+        session = stripe.checkout.Session.retrieve(session_data["id"], expand=["line_items"])
         line_items = []
-        for item in session.get("display_items", []):
-            title = item.get("description", "Product")
-            amount = float(item["amount_total"]) / 100
+
+        for item in session["line_items"]["data"]:
+            title = item["description"]
             quantity = item["quantity"]
+            price = float(item["price"]["unit_amount"]) / 100
+
             line_items.append({
                 "title": title,
-                "price": amount,
-                "quantity": quantity
+                "quantity": quantity,
+                "price": price
             })
 
         order_data = {
@@ -103,11 +105,8 @@ def create_shopify_order(session):
             "Content-Type": "application/json"
         }
 
-        response = requests.post(
-            f"https://{SHOPIFY_STORE}/admin/api/2023-10/orders.json",
-            headers=headers,
-            data=json.dumps(order_data)
-        )
+        url = f"https://{SHOPIFY_STORE}/admin/api/2023-10/orders.json"
+        response = requests.post(url, headers=headers, data=json.dumps(order_data))
 
         if response.status_code == 201:
             print("✅ Shopify order created.")
@@ -120,8 +119,9 @@ def create_shopify_order(session):
 
     except Exception as e:
         print("❌ Error in create_shopify_order:", str(e))
+        traceback.print_exc()
 
-# --- Stripe Webhook Endpoint ---
+# --- Stripe Webhook ---
 @app.route("/stripe-webhook", methods=['POST'])
 def stripe_webhook():
     payload = request.data
@@ -137,7 +137,7 @@ def stripe_webhook():
 
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        print("✅ Checkout session completed:", session)
+        print("✅ Checkout session completed:", session["id"])
         create_shopify_order(session)
 
     elif event['type'] == 'payment_intent.succeeded':
@@ -169,42 +169,24 @@ def create_stripe_product(product):
     product_desc = product.get("body_html", "")
     price_cents = int(float(product["variants"][0]["price"]) * 100)
 
-    product_response = requests.post(
-        "https://api.stripe.com/v1/products",
-        data={"name": product_name, "description": product_desc},
-        auth=(stripe.api_key, "")
+    product_response = stripe.Product.create(
+        name=product_name,
+        description=product_desc
     )
 
-    if product_response.status_code == 200:
-        stripe_product = product_response.json()
-        price_response = requests.post(
-            "https://api.stripe.com/v1/prices",
-            data={"unit_amount": price_cents, "currency": "usd", "product": stripe_product["id"]},
-            auth=(stripe.api_key, "")
-        )
+    price = stripe.Price.create(
+        unit_amount=price_cents,
+        currency="usd",
+        product=product_response["id"]
+    )
 
-        if price_response.status_code == 200:
-            stripe_price = price_response.json()
-            session_response = requests.post(
-                "https://api.stripe.com/v1/checkout/sessions",
-                data={
-                    "line_items[0][price]": stripe_price["id"],
-                    "line_items[0][quantity]": 1,
-                    "mode": "payment",
-                    "success_url": "https://devsuggests.com/account",
-                    "cancel_url": "https://devsuggests.com/pages/cancel"
-                },
-                auth=(stripe.api_key, "")
-            )
-            if session_response.status_code == 200:
-                session = session_response.json()
-                print(f"🛒 Checkout Link: {session['url']}")
-            else:
-                print("⚠️ Failed to create checkout session.")
-        else:
-            print("⚠️ Failed to create price in Stripe.")
-    else:
-        print("❌ Failed to create Stripe product.")
+    session = stripe.checkout.Session.create(
+        line_items=[{"price": price["id"], "quantity": 1}],
+        mode="payment",
+        success_url="https://devsuggests.com/account",
+        cancel_url="https://devsuggests.com/pages/cancel"
+    )
+    print(f"🛒 Checkout Link: {session.url}")
 
 def sync_shopify_to_stripe():
     products = get_shopify_products()
@@ -231,7 +213,7 @@ def handle_shopify_product_creation():
 
     return jsonify({'status': 'success'}), 200
 
-# --- ✅ RUN SERVER ---
+# --- Run Flask Server ---
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
