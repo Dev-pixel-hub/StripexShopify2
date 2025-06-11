@@ -58,15 +58,38 @@ def create_checkout_session():
     if not line_items:
         return jsonify({'error': 'No valid products'}), 400
 
+    # --- Stripe Checkout Session ---
+:contentReference[oaicite:1]{index=1}
+def create_checkout_session():
+    :contentReference[oaicite:2]{index=2}
+
     try:
         session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
+            # let Stripe decide eligible payment methods dynamically
             line_items=line_items,
             mode='payment',
             billing_address_collection='required',
-            shipping_address_collection={'allowed_countries': ['US', 'CA']},
-            success_url='https://devsuggests.com',
-            cancel_url='https://devsuggests.com/cancel',
+            shipping_address_collection={
+                'allowed_countries': [
+                    # All ISO country codes supported by Stripe (note: include 'SD' as of Jan 2025) :contentReference[oaicite:3]{index=3}
+                    'AF','AL','DZ','AS','AD','AO','AG','AR','AM','AU','AT','AZ','BS','BH',
+                    'BD','BB','BY','BE','BZ','BJ','BT','BO','BA','BW','BR','BN','BG','BF',
+                    'BI','KH','CM','CA','CV','KY','CF','TD','CL','CN','CO','KM','CG','CR',
+                    'CI','HR','CU','CY','CZ','DK','DJ','DM','DO','EC','EG','SV','GQ','ER',
+                    'EE','ET','FJ','FI','FR','GA','GM','GE','DE','GH','GI','GR','GL','GD',
+                    'GT','GG','GN','GW','GY','HT','HN','HK','HU','IS','IN','ID','IE','IL',
+                    'IT','JM','JP','JE','JO','KZ','KE','KI','KW','KG','LA','LV','LB','LS',
+                    'LR','LI','LT','LU','MO','MK','MG','MW','MY','MV','ML','MT','MH','MR',
+                    'MU','MX','FM','MD','MC','MN','ME','MA','MZ','MM','NA','NR','NP','NL',
+                    'NZ','NI','NE','NG','NO','OM','PK','PW','PA','PG','PY','PE','PH','PL',
+                    'PT','QA','RO','RU','RW','KN','LC','VC','WS','SM','ST','SA','SN','RS',
+                    'SC','SL','SG','SK','SI','SB','ZA','KR','ES','LK','LC','SR','SZ','SE',
+                    'CH','TW','TJ','TZ','TH','TG','TO','TT','TN','TR','TV','UG','UA','AE',
+                    'GB','US','UY','UZ','VU','VE','VN','YE','ZM','ZW','SD'
+                ]
+            },
+            success_url='https://DevSuggests.com',
+            cancel_url='https://DevSuggests.com/cancel',
         )
         return redirect(session.url, code=303)
     except Exception as e:
