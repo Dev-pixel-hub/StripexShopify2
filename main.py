@@ -110,6 +110,7 @@ def create_checkout_session():
             success_url='https://DevSuggests.com',
             cancel_url='https://DevSuggests.com/cancel',
         )
+        print("✅ Stripe session created:", session.url)
         return redirect(session.url, code=303)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
