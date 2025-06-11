@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Shopify and Stripe Keys ---
-SHOPIFY_STORE = os.getenv("SHOPIFY_STORE")  # e.g., "yourstore.myshopify.com"
+SHOPIFY_STORE = os.getenv("SHOPIFY_STORE")
 SHOPIFY_ADMIN_TOKEN = os.getenv("SHOPIFY_ADMIN_TOKEN")
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
@@ -58,19 +58,14 @@ def create_checkout_session():
     if not line_items:
         return jsonify({'error': 'No valid products'}), 400
 
-    # --- Stripe Checkout Session ---
-:contentReference[oaicite:1]{index=1}
-def create_checkout_session():
-    
     try:
         session = stripe.checkout.Session.create(
-            # let Stripe decide eligible payment methods dynamically
             line_items=line_items,
             mode='payment',
             billing_address_collection='required',
             shipping_address_collection={
                 'allowed_countries': [
-                    # All ISO country codes supported by Stripe (note: include 'SD' as of Jan 2025) :contentReference[oaicite:3]{index=3}
+                    # All Stripe-supported countries
                     'AF','AL','DZ','AS','AD','AO','AG','AR','AM','AU','AT','AZ','BS','BH',
                     'BD','BB','BY','BE','BZ','BJ','BT','BO','BA','BW','BR','BN','BG','BF',
                     'BI','KH','CM','CA','CV','KY','CF','TD','CL','CN','CO','KM','CG','CR',
@@ -82,9 +77,9 @@ def create_checkout_session():
                     'MU','MX','FM','MD','MC','MN','ME','MA','MZ','MM','NA','NR','NP','NL',
                     'NZ','NI','NE','NG','NO','OM','PK','PW','PA','PG','PY','PE','PH','PL',
                     'PT','QA','RO','RU','RW','KN','LC','VC','WS','SM','ST','SA','SN','RS',
-                    'SC','SL','SG','SK','SI','SB','ZA','KR','ES','LK','LC','SR','SZ','SE',
-                    'CH','TW','TJ','TZ','TH','TG','TO','TT','TN','TR','TV','UG','UA','AE',
-                    'GB','US','UY','UZ','VU','VE','VN','YE','ZM','ZW','SD'
+                    'SC','SL','SG','SK','SI','SB','ZA','KR','ES','LK','SR','SZ','SE','CH',
+                    'TW','TJ','TZ','TH','TG','TO','TT','TN','TR','TV','UG','UA','AE','GB',
+                    'US','UY','UZ','VU','VE','VN','YE','ZM','ZW','SD'
                 ]
             },
             success_url='https://DevSuggests.com',
@@ -215,4 +210,3 @@ def handle_shopify_product_creation():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-
