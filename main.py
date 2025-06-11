@@ -61,8 +61,7 @@ def create_checkout_session():
     # --- Stripe Checkout Session ---
 :contentReference[oaicite:1]{index=1}
 def create_checkout_session():
-    :contentReference[oaicite:2]{index=2}
-
+    
     try:
         session = stripe.checkout.Session.create(
             # let Stripe decide eligible payment methods dynamically
