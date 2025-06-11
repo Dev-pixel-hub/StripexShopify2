@@ -66,20 +66,45 @@ def create_checkout_session():
             shipping_address_collection={
                 'allowed_countries': [
                     # All Stripe-supported countries
-                    'AF','AL','DZ','AS','AD','AO','AG','AR','AM','AU','AT','AZ','BS','BH',
-                    'BD','BB','BY','BE','BZ','BJ','BT','BO','BA','BW','BR','BN','BG','BF',
-                    'BI','KH','CM','CA','CV','KY','CF','TD','CL','CN','CO','KM','CG','CR',
-                    'CI','HR','CU','CY','CZ','DK','DJ','DM','DO','EC','EG','SV','GQ','ER',
-                    'EE','ET','FJ','FI','FR','GA','GM','GE','DE','GH','GI','GR','GL','GD',
-                    'GT','GG','GN','GW','GY','HT','HN','HK','HU','IS','IN','ID','IE','IL',
-                    'IT','JM','JP','JE','JO','KZ','KE','KI','KW','KG','LA','LV','LB','LS',
-                    'LR','LI','LT','LU','MO','MK','MG','MW','MY','MV','ML','MT','MH','MR',
-                    'MU','MX','FM','MD','MC','MN','ME','MA','MZ','MM','NA','NR','NP','NL',
-                    'NZ','NI','NE','NG','NO','OM','PK','PW','PA','PG','PY','PE','PH','PL',
-                    'PT','QA','RO','RU','RW','KN','LC','VC','WS','SM','ST','SA','SN','RS',
-                    'SC','SL','SG','SK','SI','SB','ZA','KR','ES','LK','SR','SZ','SE','CH',
-                    'TW','TJ','TZ','TH','TG','TO','TT','TN','TR','TV','UG','UA','AE','GB',
-                    'US','UY','UZ','VU','VE','VN','YE','ZM','ZW','SD'
+                    "AU",  # Australia
+                    "AT",  # Austria
+                    "BE",  # Belgium
+                    "BG",  # Bulgaria
+                    "CA",  # Canada
+                    "HR",  # Croatia
+                    "CY",  # Cyprus
+                    "CZ",  # Czech Republic
+                    "DK",  # Denmark
+                    "EE",  # Estonia
+                    "FI",  # Finland
+                    "FR",  # France
+                    "DE",  # Germany
+                    "GI",  # Gibraltar
+                    "GR",  # Greece
+                    "HK",  # Hong Kong
+                    "HU",  # Hungary
+                    "IE",  # Ireland
+                    "IT",  # Italy
+                    "JP",  # Japan
+                    "LV",  # Latvia
+                    "LI",  # Liechtenstein
+                    "LT",  # Lithuania
+                    "LU",  # Luxembourg
+                    "MT",  # Malta
+                    "MX",  # Mexico
+                    "NL",  # Netherlands
+                    "NZ",  # New Zealand
+                    "NO",  # Norway
+                    "PL",  # Poland
+                    "PT",  # Portugal
+                    "RO",  # Romania
+                    "SG",  # Singapore
+                    "SI",  # Slovenia
+                    "ES",  # Spain
+                    "SE",  # Sweden
+                    "CH",  # Switzerland
+                    "GB",  # United Kingdom
+                    "US",  # United States
                 ]
             },
             success_url='https://DevSuggests.com',
