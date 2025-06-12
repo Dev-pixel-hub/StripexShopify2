@@ -3,7 +3,7 @@ import os
 import stripe
 import requests
 import json
-from flask import Flask, request, redirect, jsonify
+from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -65,53 +65,17 @@ def create_checkout_session():
             billing_address_collection='required',
             shipping_address_collection={
                 'allowed_countries': [
-                    # All Stripe-supported countries
-                    "AU",  # Australia
-                    "AT",  # Austria
-                    "BE",  # Belgium
-                    "BG",  # Bulgaria
-                    "CA",  # Canada
-                    "HR",  # Croatia
-                    "CY",  # Cyprus
-                    "CZ",  # Czech Republic
-                    "DK",  # Denmark
-                    "EE",  # Estonia
-                    "FI",  # Finland
-                    "FR",  # France
-                    "DE",  # Germany
-                    "GI",  # Gibraltar
-                    "GR",  # Greece
-                    "HK",  # Hong Kong
-                    "HU",  # Hungary
-                    "IE",  # Ireland
-                    "IT",  # Italy
-                    "JP",  # Japan
-                    "LV",  # Latvia
-                    "LI",  # Liechtenstein
-                    "LT",  # Lithuania
-                    "LU",  # Luxembourg
-                    "MT",  # Malta
-                    "MX",  # Mexico
-                    "NL",  # Netherlands
-                    "NZ",  # New Zealand
-                    "NO",  # Norway
-                    "PL",  # Poland
-                    "PT",  # Portugal
-                    "RO",  # Romania
-                    "SG",  # Singapore
-                    "SI",  # Slovenia
-                    "ES",  # Spain
-                    "SE",  # Sweden
-                    "CH",  # Switzerland
-                    "GB",  # United Kingdom
-                    "US",  # United States
+                    "AU", "AT", "BE", "BG", "CA", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
+                    "DE", "GI", "GR", "HK", "HU", "IE", "IT", "JP", "LV", "LI", "LT", "LU",
+                    "MT", "MX", "NL", "NZ", "NO", "PL", "PT", "RO", "SG", "SI", "ES", "SE",
+                    "CH", "GB", "US",
                 ]
             },
             success_url='https://DevSuggests.com',
             cancel_url='https://DevSuggests.com/cancel',
         )
         print("✅ Stripe session created:", session.url)
-        return redirect(session.url, code=303)
+        return jsonify({'url': session.url}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
