@@ -215,7 +215,7 @@ def handle_shopify_product_creation():
         unit_amount=int(float(price) * 100),
         currency='usd',
         product=product['id']
-        
+    )
 
     return jsonify({'status': 'success'}), 200
 
@@ -228,3 +228,4 @@ def manual_sync():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
