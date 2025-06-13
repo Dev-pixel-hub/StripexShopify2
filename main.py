@@ -71,25 +71,38 @@ def create_checkout_session():
                     "CH", "GB", "US",
                 ]
             },
-            success_url='https://DevSuggests.com',
-            cancel_url='https://DevSuggests.com/cancel',
+            success_url='https://devsuggests.com/thank-you',
+            cancel_url='https://devsuggests.com/cancel',
         )
         print("✅ Stripe session created:", session.url)
         return jsonify({'url': session.url}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# --- Create Shopify Order ---
+# --- Thank You Page (track button) ---
+@app.route('/thank-you')
+def thank_you():
+    return """
+    <h1>Thank you for your purchase!</h1>
+    <p>You can track your order using the button below:</p>
+    <a href='https://track.123track.net' target='_blank'>
+        <button>Track My Order</button>
+    </a>
+    """
+
+# --- Create Shopify Order (w/ shipping)
 def create_shopify_order(session_id):
     try:
         session = stripe.checkout.Session.retrieve(session_id, expand=["line_items"])
-        line_items = []
+        customer_email = session["customer_details"]["email"]
+        shipping = session.get("shipping", {})
+        address = shipping.get("address", {})
 
+        line_items = []
         for item in session["line_items"]["data"]:
             title = item["description"]
             quantity = item["quantity"]
             price = float(item["price"]["unit_amount"]) / 100
-
             line_items.append({
                 "title": title,
                 "quantity": quantity,
@@ -98,9 +111,19 @@ def create_shopify_order(session_id):
 
         order_data = {
             "order": {
-                "email": session["customer_details"]["email"],
+                "email": customer_email,
                 "line_items": line_items,
-                "financial_status": "paid"
+                "financial_status": "paid",
+                "shipping_address": {
+                    "first_name": shipping.get("name", "").split(' ')[0],
+                    "last_name": shipping.get("name", "").split(' ')[-1],
+                    "address1": address.get("line1") or address.get("address1"),
+                    "address2": address.get("line2") or "",
+                    "city": address.get("city"),
+                    "province": address.get("state") or address.get("province"),
+                    "country": address.get("country"),
+                    "zip": address.get("postal_code") or address.get("zip"),
+                }
             }
         }
 
@@ -121,7 +144,7 @@ def create_shopify_order(session_id):
         print("❌ Error in create_shopify_order:", str(e))
         traceback.print_exc()
 
-# --- Stripe Webhook ---
+# --- Stripe Webhook
 @app.route("/stripe-webhook", methods=['POST'])
 def stripe_webhook():
     payload = request.data
@@ -139,7 +162,7 @@ def stripe_webhook():
 
     return '', 200
 
-# --- Shopify to Stripe Sync ---
+# --- Shopify to Stripe Sync
 def get_shopify_products():
     url = f"https://{SHOPIFY_STORE}/admin/api/2023-10/products.json"
     headers = {
@@ -192,9 +215,14 @@ def handle_shopify_product_creation():
         unit_amount=int(float(price) * 100),
         currency='usd',
         product=product['id']
-    )
+        
 
     return jsonify({'status': 'success'}), 200
+
+@app.route('/sync-shopify-to-stripe', methods=['POST'])
+def manual_sync():
+    sync_shopify_to_stripe()
+    return "Synced", 200
 
 # --- Run Flask Server ---
 if __name__ == '__main__':
