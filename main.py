@@ -219,13 +219,12 @@ def handle_shopify_product_creation():
 
     return jsonify({'status': 'success'}), 200
 
-@app.route('/sync-shopify-to-stripe', methods=['POST'])
-def manual_sync():
-    sync_shopify_to_stripe()
-    return "Synced", 200
-
 # --- Run Flask Server ---
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
 
+@app.route('/sync-shopify-to-stripe', methods=['POST'])
+def manual_sync():
+    sync_shopify_to_stripe()
+    return "Synced", 200
